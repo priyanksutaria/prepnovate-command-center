@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Plus, Save, Target } from 'lucide-react';
+import { TEST_ID_MAPPING, TestLevel, TestSubject } from './testMapping';
 
 interface ChapterWeightage {
   chapter: string;
+  chapterCode: string;
   weightage: number;
   enabled: boolean;
 }
@@ -26,8 +27,8 @@ interface MockTestCreatorProps {
 export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClose, onCreateTest }) => {
   const [testData, setTestData] = useState({
     title: '',
-    level: '',
-    subject: '',
+    level: '' as TestLevel | '',
+    subject: '' as TestSubject | '',
     description: '',
     totalQuestions: 50,
     timeLimit: 90,
@@ -37,42 +38,42 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
 
   const [chapterWeightages, setChapterWeightages] = useState<ChapterWeightage[]>([]);
 
-  const subjects = [
-    'Ethics & Professional Standards',
-    'Quantitative Methods', 
-    'Economics',
-    'Financial Statement Analysis',
-    'Corporate Finance',
-    'Portfolio Management',
-    'Equity Investments',
-    'Fixed Income',
-    'Derivatives',
-    'Alternative Investments'
-  ];
+  // Get available levels from TEST_ID_MAPPING
+  const levels = Object.keys(TEST_ID_MAPPING) as TestLevel[];
 
-  const chapters = {
-    'Ethics & Professional Standards': ['Code of Ethics', 'Standards of Practice', 'Global Investment Performance Standards'],
-    'Quantitative Methods': ['Time Value of Money', 'Statistical Concepts', 'Probability Concepts', 'Correlation and Regression'],
-    'Economics': ['Microeconomics', 'Macroeconomics', 'International Trade', 'Currency Exchange'],
-    'Financial Statement Analysis': ['Financial Reporting', 'Income Statement', 'Balance Sheet', 'Cash Flow Statement'],
-    'Corporate Finance': ['Capital Structure', 'Cost of Capital', 'Working Capital', 'Corporate Governance'],
-    'Portfolio Management': ['Portfolio Theory', 'Asset Allocation', 'Risk Management', 'Performance Evaluation'],
-    'Equity Investments': ['Market Organization', 'Security Analysis', 'Valuation Models', 'Industry Analysis'],
-    'Fixed Income': ['Bond Fundamentals', 'Yield Measures', 'Interest Rate Risk', 'Credit Analysis'],
-    'Derivatives': ['Forward Contracts', 'Futures', 'Options', 'Swaps'],
-    'Alternative Investments': ['Real Estate', 'Private Equity', 'Hedge Funds', 'Commodities']
+  // Get subjects for the selected level
+  const getSubjectsForLevel = (level: TestLevel): TestSubject[] => {
+    if (!level || !TEST_ID_MAPPING[level]) return [];
+    return Object.keys(TEST_ID_MAPPING[level]) as TestSubject[];
   };
 
-  const handleSubjectChange = (subject: string) => {
+  // Get chapters for the selected level and subject
+  const getChaptersForSubject = (level: TestLevel, subject: TestSubject) => {
+    if (!level || !subject || !TEST_ID_MAPPING[level] || !TEST_ID_MAPPING[level][subject]) return {};
+    return TEST_ID_MAPPING[level][subject];
+  };
+
+  const handleLevelChange = (level: TestLevel) => {
+    setTestData({ ...testData, level, subject: '' });
+    setChapterWeightages([]);
+  };
+
+  const handleSubjectChange = (subject: TestSubject) => {
     setTestData({ ...testData, subject });
     
+    if (!testData.level) return;
+    
+    // Get chapters from the mapping
+    const subjectChapters = getChaptersForSubject(testData.level, subject);
+    const chapterEntries = Object.entries(subjectChapters);
+    
     // Initialize chapter weightages
-    const subjectChapters = chapters[subject as keyof typeof chapters] || [];
-    const evenWeightage = Math.floor(100 / subjectChapters.length);
-    const newWeightages: ChapterWeightage[] = subjectChapters.map((chapter, index) => ({
-      chapter,
-      weightage: index === subjectChapters.length - 1 
-        ? 100 - (evenWeightage * (subjectChapters.length - 1)) // Last chapter gets remainder
+    const evenWeightage = Math.floor(100 / chapterEntries.length);
+    const newWeightages: ChapterWeightage[] = chapterEntries.map(([chapterName, chapterCode], index) => ({
+      chapter: chapterName,
+      chapterCode,
+      weightage: index === chapterEntries.length - 1 
+        ? 100 - (evenWeightage * (chapterEntries.length - 1)) // Last chapter gets remainder
         : evenWeightage,
       enabled: true
     }));
@@ -115,7 +116,7 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
     return Math.round((chapter.weightage / 100) * testData.totalQuestions);
   };
 
- const handleCreateTest = async () => {
+  const handleCreateTest = async () => {
     const enabledChapters = chapterWeightages.filter(c => c.enabled);
     
     // Prepare data in the format expected by the backend
@@ -125,9 +126,9 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
       timelimit: testData.timeLimit,
       passingscore: testData.passingScore,
       description: testData.description,
-      weightage: enabledChapters.reduce((acc, chapter, index) => {
-        // Using index as ID for now - you may need to map chapters to actual IDs
-        acc[String(100 + index)] = chapter.weightage;
+      // Use chapter codes as keys for weightage mapping
+      weightage: enabledChapters.reduce((acc, chapter) => {
+        acc[chapter.chapterCode] = chapter.weightage;
         return acc;
       }, {} as Record<string, number>)
     };
@@ -155,6 +156,7 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
           totalWeightage: getTotalWeightage(),
           estimatedQuestions: enabledChapters.map(chapter => ({
             chapter: chapter.chapter,
+            chapterCode: chapter.chapterCode,
             questions: getEstimatedQuestions(chapter),
             weightage: chapter.weightage
           })),
@@ -175,6 +177,8 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
       alert('Network error: Failed to create test. Please try again.');
     }
   };
+
+  const currentSubjects = testData.level ? getSubjectsForLevel(testData.level) : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -202,25 +206,29 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
                 </div>
                 <div>
                   <Label className="text-slate-300">CFA Level</Label>
-                  <Select value={testData.level} onValueChange={(value) => setTestData({...testData, level: value})}>
+                  <Select value={testData.level} onValueChange={handleLevelChange}>
                     <SelectTrigger className="bg-slate-600 border-slate-500 text-white">
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600">
-                      <SelectItem value="Level I">Level I</SelectItem>
-                      <SelectItem value="Level II">Level II</SelectItem>
-                      <SelectItem value="Level III">Level III</SelectItem>
+                      {levels.map(level => (
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label className="text-slate-300">Subject</Label>
-                  <Select value={testData.subject} onValueChange={handleSubjectChange}>
+                  <Select 
+                    value={testData.subject} 
+                    onValueChange={handleSubjectChange}
+                    disabled={!testData.level}
+                  >
                     <SelectTrigger className="bg-slate-600 border-slate-500 text-white">
                       <SelectValue placeholder="Select subject" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600">
-                      {subjects.map(subject => (
+                      {currentSubjects.map(subject => (
                         <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                       ))}
                     </SelectContent>
@@ -302,7 +310,7 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
               <CardContent>
                 <div className="space-y-4">
                   {chapterWeightages.map((chapter, index) => (
-                    <div key={chapter.chapter} className="bg-slate-600 p-4 rounded-lg">
+                    <div key={chapter.chapterCode} className="bg-slate-600 p-4 rounded-lg">
                       <div className="flex items-center space-x-4">
                         <Checkbox
                           checked={chapter.enabled}
@@ -312,7 +320,7 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
                         <div className="flex-1">
                           <div className="text-white font-medium">{chapter.chapter}</div>
                           <div className="text-slate-300 text-sm">
-                            ~{getEstimatedQuestions(chapter)} questions
+                            Code: {chapter.chapterCode} • ~{getEstimatedQuestions(chapter)} questions
                           </div>
                         </div>
                         <div className="w-48">
@@ -363,3 +371,4 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
     </Dialog>
   );
 };
+export default MockTestCreator;

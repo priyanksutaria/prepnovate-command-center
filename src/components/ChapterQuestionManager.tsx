@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, Plus, Eye, Trash2, Edit, Save, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TEST_ID_MAPPING, TestLevel, TestSubject, TestChapter } from './testMapping';
 
 interface Question {
   id: string;
@@ -24,91 +25,11 @@ interface ChapterQuestionManagerProps {
 
 //const token = localStorage.getItem('authToken');
 
-const TEST_ID_MAPPING = {
-  'Level I': {
-    'Ethics & Professional Standards': {
-      'Code of Ethics': 100,
-      'Standards of Practice': 101,
-      'Global Investment Performance Standards': 102
-    },
-    'Quantitative Methods': {
-      'Time Value of Money': 110,
-      'Statistical Concepts': 111,
-      'Probability Concepts': 112,
-      'Sampling & Estimation': 113,
-      'Hypothesis Testing': 114,
-      'Correlation & Regression': 115
-    },
-    'Economics': {
-      'Microeconomics': 120,
-      'Macroeconomics': 121,
-      'International Trade': 122,
-      'Economic Growth & Development': 123,
-      'Monetary & Fiscal Policy': 124
-    },
-    'Financial Reporting & Analysis': {
-      'Financial Statements': 130,
-      'Income Statement': 131,
-      'Balance Sheet': 132,
-      'Cash Flow Statement': 133,
-      'Financial Ratios': 134,
-      'Inventory Valuation': 135,
-      'Long-Term Assets': 136,
-      'Leases & Off-Balance-Sheet Financing': 137
-    },
-    'Corporate Finance': {
-      'Capital Budgeting': 140,
-      'Cost of Capital': 141,
-      'Corporate Governance': 142,
-      'Working Capital Management': 143,
-      'Dividend Policy': 144,
-      'Mergers & Acquisitions': 145
-    },
-    'Equity Investments': {
-      'Market Organization & Structure': 150,
-      'Security Market Indexes': 151,
-      'Market Efficiency': 152,
-      'Equity Valuation': 153,
-      'Industry & Company Analysis': 154
-    },
-    'Fixed Income': {
-      'Fixed-Income Securities': 160,
-      'Risk & Return': 161,
-      'Yield Measures': 162,
-      'Valuation of Bonds': 163,
-      'Credit Analysis': 164,
-      'Asset-Backed Securities': 165
-    },
-    'Derivatives': {
-      'Introduction to Derivatives': 170,
-      'Forward Contracts': 171,
-      'Futures Contracts': 172,
-      'Options': 173,
-      'Swaps': 174,
-      'Risk Management Applications': 175
-    },
-    'Alternative Investments': {
-      'Real Estate': 180,
-      'Private Equity': 181,
-      'Hedge Funds': 182,
-      'Commodities': 183,
-      'Infrastructure': 184
-    },
-    'Portfolio Management': {
-      'Portfolio Concepts': 190,
-      'Asset Allocation': 191,
-      'Risk Management': 192,
-      'Performance Evaluation': 193
-    }
-  },
-  'Level II': { /* Add details for Level II */ },
-  'Level III': { /* Add details for Level III */ }
-};
 
 export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ isOpen, onClose }) => {
-  const [selectedLevel, setSelectedLevel] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedChapter, setSelectedChapter] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState<TestLevel>("Level I");
+  const [selectedSubject, setSelectedSubject] = useState<TestSubject>("Ethics & Professional Standards");
+  const [selectedChapter, setSelectedChapter] = useState<TestChapter>("Ethics and Trust in the Investment Profession");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [bulkQuestionsJson, setBulkQuestionsJson] = useState('');
   const [loading, setLoading] = useState(false);
@@ -137,25 +58,18 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
     explanation: ''
   });
 
-  const subjects = [
-    'Ethics & Professional Standards',
-    'Quantitative Methods',
-    'Economics',
-    'Financial Statement Analysis',
-    'Corporate Finance',
-    'Portfolio Management',
-    'Equity Investments',
-    'Fixed Income',
-    'Derivatives',
-    'Alternative Investments'
-  ];
+  // Get all available levels
+  const levels = Object.keys(TEST_ID_MAPPING) as TestLevel[];
 
-  const chapters = {
-    'Ethics & Professional Standards': ['Code of Ethics', 'Standards of Practice', 'Global Investment Performance Standards'],
-    'Quantitative Methods': ['Time Value of Money', 'Statistical Concepts', 'Probability Concepts'],
-    'Economics': ['Microeconomics', 'Macroeconomics', 'International Trade'],
-    // Add more chapters for other subjects as needed
-  };
+  // Get subjects for selected level
+  const subjects = selectedLevel 
+    ? Object.keys(TEST_ID_MAPPING[selectedLevel]) as TestSubject[] 
+    : [];
+
+  // Get chapters for selected subject
+  const chapters = selectedLevel && selectedSubject 
+    ? Object.keys(TEST_ID_MAPPING[selectedLevel][selectedSubject]) as TestChapter[] 
+    : [];
 
   const showMessage = (message: string, type: 'success' | 'error') => {
     // Simple alert for now - you can replace with a proper toast notification
@@ -221,7 +135,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
             Authorization: `Bearer ${token}`, // Include Bearer token
           },
           body: JSON.stringify({
-            testnum: String(testnum),
+            testnum: testnum,
             question: newQuestion,
           }),
         }
@@ -429,20 +343,24 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label className="text-slate-300">CFA Level</Label>
-                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                  <Select value={selectedLevel} onValueChange={v => setSelectedLevel(v as TestLevel)}>
                     <SelectTrigger className="bg-slate-600 border-slate-500 text-white">
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600">
-                      <SelectItem value="Level I">Level I</SelectItem>
-                      <SelectItem value="Level II">Level II</SelectItem>
-                      <SelectItem value="Level III">Level III</SelectItem>
+                      {levels.map(level => (
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label className="text-slate-300">Subject</Label>
-                  <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <Select 
+                    value={selectedSubject} 
+                    onValueChange={v => setSelectedSubject(v as TestSubject)}
+                    disabled={!selectedLevel}
+                  >
                     <SelectTrigger className="bg-slate-600 border-slate-500 text-white">
                       <SelectValue placeholder="Select subject" />
                     </SelectTrigger>
@@ -455,12 +373,16 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
                 </div>
                 <div>
                   <Label className="text-slate-300">Chapter</Label>
-                  <Select value={selectedChapter} onValueChange={setSelectedChapter}>
+                  <Select 
+                    value={selectedChapter} 
+                    onValueChange={v => setSelectedChapter(v as TestChapter)}
+                    disabled={!selectedSubject}
+                  >
                     <SelectTrigger className="bg-slate-600 border-slate-500 text-white">
                       <SelectValue placeholder="Select chapter" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600">
-                      {selectedSubject && chapters[selectedSubject as keyof typeof chapters]?.map(chapter => (
+                      {chapters.map(chapter => (
                         <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
                       ))}
                     </SelectContent>
