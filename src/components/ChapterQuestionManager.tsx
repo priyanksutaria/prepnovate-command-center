@@ -41,7 +41,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
     explanation?: string;
   }>({
     question: '',
-    options: ['', '', '', ''],
+    options: ['', '', ''],
     answer: '',
     explanation: ''
   });
@@ -53,7 +53,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
     explanation?: string;
   }>({
     question: '',
-    options: ['', '', '', ''],
+    options: ['', '', ''],
     answer: '',
     explanation: ''
   });
@@ -144,7 +144,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
 
       setNewQuestion({
         question: '',
-        options: ['', '', '', ''],
+        options: ['', '', ''],
         answer: '',
         explanation: ''
       });
@@ -207,7 +207,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
     setEditingQuestionId(question.id);
     setEditQuestion({
       question: question.question,
-      options: question.options || ['', '', '', ''],
+      options: question.options || ['', '', ''],
       answer: question.answer || '',
       explanation: question.explanation || ''
     });
@@ -255,7 +255,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
       setEditingQuestionId(null);
       setEditQuestion({
         question: '',
-        options: ['', '', '', ''],
+        options: ['', '', ''],
         answer: '',
         explanation: ''
       });
@@ -320,7 +320,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
     setEditingQuestionId(null);
     setEditQuestion({
       question: '',
-      options: ['', '', '', ''],
+      options: ['', '', ''],
       answer: '',
       explanation: ''
     });
@@ -455,7 +455,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
                                 <SelectValue placeholder="Select correct answer" />
                               </SelectTrigger>
                               <SelectContent className="bg-slate-700 border-slate-600">
-                                {['A', 'B', 'C', 'D'].map((letter, idx) => (
+                                {['A', 'B', 'C'].map((letter, idx) => (
                                   <SelectItem key={letter} value={letter}>
                                     {letter}: {editQuestion.options[idx] || `Option ${letter}`}
                                   </SelectItem>
@@ -594,7 +594,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
                         <SelectValue placeholder="Select correct answer" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-700 border-slate-600">
-                        {['A', 'B', 'C', 'D'].map((letter, idx) => (
+                        {['A', 'B', 'C'].map((letter, idx) => (
                           <SelectItem key={letter} value={letter}>
                             {letter}: {newQuestion.options[idx] || `Option ${letter}`}
                           </SelectItem>

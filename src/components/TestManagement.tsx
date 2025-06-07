@@ -234,21 +234,30 @@ export const TestManagement: React.FC = () => {
     console.log('Test updated:', updatedTest);
   };
 
-  const handleDeleteTest = (testId: string) => {
-    setTests(tests.filter((t) => t.id !== testId));
-    console.log('Test deleted:', testId);
-  };
-
-  const handleDuplicateTest = (test: Test) => {
-    const duplicatedTest: Test = {
-      ...test,
-      id: Date.now().toString(),
-      title: `${test.title} (Copy)`,
-      status: 'draft',
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setTests([duplicatedTest, ...tests]);
-    console.log('Test duplicated:', duplicatedTest);
+  const handleDeleteMockTest = async (testName: string) => {
+    const token = localStorage.getItem('authToken'); // Get the token from local storage
+    try {
+      const response = await fetch('https://prepnovate-backend.onrender.com/api/test/deleteMockTest', {
+        method: 'POST',
+         headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Include Bearer token
+        },
+        body: JSON.stringify({
+          name: testName,
+        }),
+      });
+      const json = await response.json();
+      if (json.success) {
+        // Remove the test from the local state
+        setTests(tests.filter(test => test.title !== testName));
+        console.log('Mock test deleted:', testName);
+      } else {
+        console.error('Failed to delete mock test:', json.message);
+      }
+    } catch (error) {
+      console.error('Error deleting mock test:', error);
+    }
   };
 
   // If we’re in “details” mode, render TestDetailsView
@@ -290,13 +299,6 @@ export const TestManagement: React.FC = () => {
         {/* ─────────────── “All Tests” Tab ─────────────── */}
         <TabsContent value="tests">
           <div className="flex flex-wrap gap-3 mb-6">
-            <Button
-              onClick={() => setIsCreateFormOpen(true)}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white"
-            >
-              <Plus size={20} className="mr-2" />
-              Create Manual Test
-            </Button>
             <Button
               onClick={() => setIsMockTestCreatorOpen(true)}
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -460,15 +462,6 @@ export const TestManagement: React.FC = () => {
                           >
                             <Eye size={16} />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDuplicateTest(test)}
-                            className="border-slate-600 text-slate-300 hover:text-white"
-                            title="Duplicate Test"
-                          >
-                            <Edit size={16} />
-                          </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
@@ -486,9 +479,7 @@ export const TestManagement: React.FC = () => {
                                   Delete Test
                                 </AlertDialogTitle>
                                 <AlertDialogDescription className="text-slate-300">
-                                  Are you sure you want to delete &quot;
-                                  {test.title}&quot;? This action cannot be
-                                  undone.
+                                  Are you sure you want to delete &quot;{test.title}&quot;? This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -496,7 +487,7 @@ export const TestManagement: React.FC = () => {
                                   Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleDeleteTest(test.id)}
+                                  onClick={() => handleDeleteMockTest(test.title)} // Call the delete function here
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Delete
@@ -504,6 +495,7 @@ export const TestManagement: React.FC = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+
                         </div>
                       </td>
                     </tr>
@@ -518,13 +510,6 @@ export const TestManagement: React.FC = () => {
                   No tests found matching your criteria
                 </p>
                 <div className="flex justify-center space-x-3">
-                  <Button
-                    onClick={() => setIsCreateFormOpen(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                  >
-                    <Plus size={16} className="mr-2" />
-                    Create Manual Test
-                  </Button>
                   <Button
                     onClick={() => setIsMockTestCreatorOpen(true)}
                     className="bg-purple-600 hover:bg-purple-700 text-white"
