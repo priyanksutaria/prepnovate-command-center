@@ -22,7 +22,7 @@ interface ChapterQuestionManagerProps {
   onClose: () => void;
 }
 
-const token = localStorage.getItem('authToken');
+//const token = localStorage.getItem('authToken');
 
 const TEST_ID_MAPPING = {
   'Level I': {
@@ -190,6 +190,8 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
   };
 
   const handleAddQuestion = async () => {
+    const token = localStorage.getItem('authToken');
+
     if (
       !newQuestion.question.trim() ||
       newQuestion.options.some((opt) => !opt.trim()) ||
@@ -243,6 +245,8 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
   };
 
   const handleDeleteQuestion = async (questionId: string, questionIndex: number) => {
+
+    const token = localStorage.getItem('authToken');
     if (!selectedLevel || !selectedSubject || !selectedChapter) {
       showMessage('Please select level, subject and chapter', 'error');
       return;
@@ -296,6 +300,9 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
   };
 
   const handleUpdateQuestion = async (questionIndex: number) => {
+
+    const token = localStorage.getItem('authToken');
+
     if (
       !editQuestion.question.trim() ||
       editQuestion.options.some((opt) => !opt.trim()) ||
@@ -348,6 +355,7 @@ export const ChapterQuestionManager: React.FC<ChapterQuestionManagerProps> = ({ 
   };
 
   const handleBulkUpload = async () => {
+    const token = localStorage.getItem('authToken');
     if (!selectedLevel || !selectedSubject || !selectedChapter || !bulkQuestionsJson.trim()) {
       showMessage('Please select level, subject, chapter and add questions JSON', 'error');
       return;

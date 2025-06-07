@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const getToken = () => token || localStorage.getItem('authToken') || null;
 
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
@@ -91,11 +92,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('authUser');
   };
 
+  
+
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
+        token: getToken(),
         login,
         logout,
         isAuthenticated: !!token,

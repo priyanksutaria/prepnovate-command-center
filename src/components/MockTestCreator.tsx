@@ -132,12 +132,14 @@ export const MockTestCreator: React.FC<MockTestCreatorProps> = ({ isOpen, onClos
       }, {} as Record<string, number>)
     };
 
+    const token = localStorage.getItem('authToken');
+
     try {
       const response = await fetch('https://prepnovate-backend.onrender.com/api/test/addMockTest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NDkxMDY5NjF9.LVrvUNzq8eYIP1NyCJsOFr5ftx4Z8faVvlUcP5XDTHc`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(backendPayload)
       });
